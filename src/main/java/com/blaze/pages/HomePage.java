@@ -25,6 +25,12 @@ public class HomePage extends BasePage {
     @FindBy(id = "nameofuser")
     private WebElement loggedInUser;
 
+    @FindBy(id = "logout2")
+    private WebElement logOut;
+
+    @FindBy(id = "signin2")
+    private WebElement signUp;
+
     public HomePage(WebDriver driver) {
         super(driver);
     }
@@ -59,5 +65,21 @@ public class HomePage extends BasePage {
         alert.accept();
         System.out.println("Alert text: " + alertText);
         return alertText;
+    }
+
+    public void logout() {
+        click(logOut);
+    }
+
+    public boolean userNameNotDisplayed() {
+        return !isDisplayed(loggedInUser);
+    }
+
+    public boolean isLoginOptionDisplayed() {
+        return isDisplayed(login);
+    }
+
+    public boolean isSignUpOptionDisplayed() {
+        return isDisplayed(signUp);
     }
 }

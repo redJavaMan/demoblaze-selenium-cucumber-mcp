@@ -1,17 +1,17 @@
 package com.blaze.steps.LoginTest;
 
-import io.cucumber.java.en.Given;
+import io.cucumber.java.en.*;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import static org.junit.Assert.*;
 import com.blaze.config.WebDriverManager;
 import com.blaze.pages.HomePage;
 
-public class LoginTestStep {
+public class UserLoginStep {
     private HomePage homePage;
     private String username;
 
-    public LoginTestStep(WebDriverManager webDriverManager) {
+    public UserLoginStep(WebDriverManager webDriverManager) {
         homePage = new HomePage(webDriverManager.getDriver());
     }
 
@@ -47,5 +47,28 @@ public class LoginTestStep {
         String alertText = homePage.getAlertTextAndAccept();
         assertEquals("Alert message does not match", expectedMessage, alertText);
         System.out.println("Alert message: " + alertText);
+    }
+
+    @Given("the user is logged in")
+    public void userIsLoggedIn() {
+        navigateToLoginPage();
+        enterCredentials();
+        verifyLoginSuccess();
+    }
+
+    @When("the user clicks on logout")
+    public void userClicksOnLogout() {
+        homePage.logout();
+    }
+
+    @Then("the user should be logged out successfully")
+    public void userShouldBeLoggedOutSuccessfully() {
+        assertTrue("Logged in username is still displayed after logout", homePage.userNameNotDisplayed());
+    }
+
+    @And("login and signup options should be visible")
+    public void loginAndSignupOptionsVisible() {
+        assertTrue("Login option is not visible", homePage.isLoginOptionDisplayed());
+        assertTrue("Signup option is not visible", homePage.isSignUpOptionDisplayed());
     }
 }
