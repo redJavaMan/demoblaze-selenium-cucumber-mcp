@@ -10,48 +10,52 @@ import java.time.Duration;
 public class BasePage {
     protected WebDriver driver;
     protected WebDriverWait wait;
-    
+
     public BasePage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         PageFactory.initElements(driver, this);
     }
-    
-    protected void click(WebElement element) {
+
+    public void click(WebElement element) {
         wait.until(ExpectedConditions.elementToBeClickable(element)).click();
     }
-    
-    protected void type(WebElement element, String text) {
+
+    public void type(WebElement element, String text) {
         wait.until(ExpectedConditions.visibilityOf(element));
         element.clear();
         element.sendKeys(text);
     }
-    
-    protected String getText(WebElement element) {
+
+    public String getText(WebElement element) {
         return wait.until(ExpectedConditions.visibilityOf(element)).getText();
     }
-    
-    protected boolean isDisplayed(WebElement element) {
+
+    public boolean isDisplayed(WebElement element) {
         try {
             return wait.until(ExpectedConditions.visibilityOf(element)).isDisplayed();
         } catch (Exception e) {
             return false;
         }
     }
-    
-    protected void navigateTo(String url) {
+
+    public void navigateTo(String url) {
         driver.get(url);
     }
-    
-    protected String getCurrentUrl() {
+
+    public String getCurrentUrl() {
         return driver.getCurrentUrl();
     }
-    
-    protected String getTitle() {
+
+    public String getTitle() {
         return driver.getTitle();
     }
-    
-    protected void waitForUrlContains(String urlPart) {
+
+    public void waitForUrlContains(String urlPart) {
         wait.until(ExpectedConditions.urlContains(urlPart));
+    }
+
+    public String getPageSource() {
+        return driver.getPageSource();
     }
 }

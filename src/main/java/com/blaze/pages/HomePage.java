@@ -31,6 +31,12 @@ public class HomePage extends BasePage {
     @FindBy(id = "signin2")
     private WebElement signUp;
 
+    @FindBy(xpath = "//button[contains(text(), 'Next')]")
+    private WebElement nextButton;
+
+    @FindBy(xpath = "//button[contains(text(), 'Previous')]")
+    private WebElement previousButton;
+
     public HomePage(WebDriver driver) {
         super(driver);
     }
@@ -81,5 +87,13 @@ public class HomePage extends BasePage {
 
     public boolean isSignUpOptionDisplayed() {
         return isDisplayed(signUp);
+    }
+
+    public void clickNext() {
+        click(nextButton);
+    }
+
+    public void clickPrevious() {
+        click(previousButton);
     }
 }
