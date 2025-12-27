@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import java.util.List;
 
 public class HomePage extends BasePage {
     @FindBy(id = "loginusername")
@@ -36,6 +37,15 @@ public class HomePage extends BasePage {
 
     @FindBy(xpath = "//button[contains(text(), 'Previous')]")
     private WebElement previousButton;
+
+    @FindBy(css = "a.hrefch")
+    private List<WebElement> productsLink;
+
+    @FindBy(xpath = "//a[text()='Cart']")
+    private WebElement cartLink;
+
+    @FindBy(id = "cat")
+    private WebElement category;
 
     public HomePage(WebDriver driver) {
         super(driver);
@@ -95,5 +105,22 @@ public class HomePage extends BasePage {
 
     public void clickPrevious() {
         click(previousButton);
+    }
+
+    public void selectProduct(String productName) {
+        for(WebElement product: productsLink){
+            if(product.getText().equalsIgnoreCase(productName)){
+                click(product);
+                break;
+            }
+        }
+    }
+
+    public void goToCart() {
+        click(cartLink);
+    }
+
+    public boolean isCategoryDisplayed() {
+        return isDisplayed(category);
     }
 }

@@ -1,5 +1,7 @@
 package com.blaze.pages;
 
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.PageFactory;
@@ -57,5 +59,18 @@ public class BasePage {
 
     public String getPageSource() {
         return driver.getPageSource();
+    }
+
+    public Alert alert() {
+        return wait.until(ExpectedConditions.alertIsPresent());
+    }
+
+    public void waitForPageLoadComplete() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        wait.until(webDriver -> 
+            ((JavascriptExecutor) webDriver)
+                .executeScript("return document.readyState")
+                .equals("complete")
+        );
     }
 }

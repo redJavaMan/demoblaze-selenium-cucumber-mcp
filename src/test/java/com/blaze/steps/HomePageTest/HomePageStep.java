@@ -8,11 +8,11 @@ import com.blaze.pages.HomePage;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.JavascriptExecutor;
 
-public class HomePageSteps {
+public class HomePageStep {
     private HomePage homePage;
     private WebDriver driver;
 
-    public HomePageSteps(WebDriverManager webDriverManager) {
+    public HomePageStep(WebDriverManager webDriverManager) {
         this.driver = webDriverManager.getDriver();
         this.homePage = new HomePage(driver);
     }
@@ -64,7 +64,6 @@ public class HomePageSteps {
 
     @When("the user scrolls to the product section")
     public void theUserScrollsToTheProductSection() {
-        // Scroll to bottom of page to see pagination
         ((JavascriptExecutor) driver)
                 .executeScript("window.scrollTo(0, document.body.scrollHeight);");
     }
@@ -78,26 +77,22 @@ public class HomePageSteps {
 
     @When("the user clicks the Next button")
     public void theUserClicksTheNextButton() {
-        // Try to find and click next button
         homePage.clickNext();
     }
 
     @Then("the next set of products should load")
     public void theNextSetOfProductsShouldLoad() {
-        // Verify page is still showing products
         String pageSource = homePage.getPageSource();
         assertTrue("Products should still be displayed after navigation", pageSource.length() > 0);
     }
 
     @When("the user clicks the Previous button")
     public void theUserClicksThePreviousButton() {
-        // Try to find and click previous button
         homePage.clickPrevious();
     }
 
     @Then("the previous set of products should load")
     public void thePreviousSetOfProductsShouldLoad() {
-        // Verify page is still showing products
         String pageSource = homePage.getPageSource();
         assertTrue("Products should still be displayed after navigation", pageSource.length() > 0);
     }
