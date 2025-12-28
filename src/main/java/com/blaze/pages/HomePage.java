@@ -47,6 +47,15 @@ public class HomePage extends BasePage {
     @FindBy(id = "cat")
     private WebElement category;
 
+    @FindBy(xpath = "//a[contains(text(), 'Phones')]")
+    private WebElement phonesCategory;
+
+    @FindBy(xpath = "//a[contains(text(), 'Laptops')]")
+    private WebElement laptopsCategory;
+
+    @FindBy(xpath = "//a[contains(text(), 'Monitors')]")
+    private WebElement monitorsCategory;
+
     public HomePage(WebDriver driver) {
         super(driver);
     }
@@ -54,6 +63,49 @@ public class HomePage extends BasePage {
     public void navigateToHomePage(String url) {
         navigateTo(url);
         waitForUrlContains(url);
+    }
+
+    /**
+     * Click on Phones category
+     */
+    public void clickPhonesCategory() {
+        click(phonesCategory);
+        waitForPageLoadComplete();
+    }
+
+    /**
+     * Click on Laptops category
+     */
+    public void clickLaptopsCategory() {
+        click(laptopsCategory);
+        waitForPageLoadComplete();
+    }
+
+    /**
+     * Click on Monitors category
+     */
+    public void clickMonitorsCategory() {
+        click(monitorsCategory);
+        waitForPageLoadComplete();
+    }
+
+    /**
+     * Click on first product from product list
+     */
+    public void clickFirstProduct() {
+        if (productsLink.size() > 0) {
+            click(productsLink.get(0));
+            waitForPageLoadComplete();
+        }
+    }
+
+    /**
+     * Get count of products displayed
+     * 
+     * @return number of products
+     */
+    public int getProductCount() {
+        return productsLink.size();
     }
 
     public void clickLogin() {
@@ -108,8 +160,8 @@ public class HomePage extends BasePage {
     }
 
     public void selectProduct(String productName) {
-        for(WebElement product: productsLink){
-            if(product.getText().equalsIgnoreCase(productName)){
+        for (WebElement product : productsLink) {
+            if (product.getText().equalsIgnoreCase(productName)) {
                 click(product);
                 break;
             }
