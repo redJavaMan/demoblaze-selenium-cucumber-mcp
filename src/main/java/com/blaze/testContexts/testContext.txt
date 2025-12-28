@@ -1,0 +1,664 @@
+# Selenium Java Cucumber Test Context - Page Object Model (POM) Standards
+
+## Overview
+This document defines the MANDATORY standards, structure, and rules for generating Selenium Java tests using Cucumber BDD and Page Object Model pattern. ALL generated code MUST follow these guidelines strictly.
+
+## Directory Structure
+
+```
+src/
+├── main/java/com/blaze/
+│   └── pages/                          # Page Object Model classes
+│       ├── BasePage.java              # Base page with common methods (DO NOT MODIFY)
+│       ├── HomePage.java              # Home page object
+│       ├── LoginPage.java             # Login page object
+│       ├── ProductPage.java           # Product page object
+│       ├── CartPage.java              # Cart page object
+│       └── [Feature]Page.java         # One page = One class
+│
+└── test/
+    ├── java/com/blaze/
+    │   ├── config/
+    │   │   └── WebDriverManager.java  # WebDriver lifecycle (DO NOT MODIFY)
+    │   ├── hooks/
+    │   │   └── Hooks.java             # Cucumber hooks (DO NOT MODIFY)
+    │   ├── runners/
+    │   │   └── [Feature]TestRunner.java
+    │   └── steps/
+    │       ├── LoginTest/
+    │       │   └── LoginStep.java     # Login step definitions
+    │       ├── ProductTest/
+    │       │   └── ProductStep.java   # Product step definitions
+    │       └── [Feature]Test/
+    │           └── [Feature]Step.java # One feature = One step class
+    │
+    └── resources/
+        └── features/
+            ├── Login.feature          # Login scenarios
+            ├── Product.feature        # Product scenarios
+            └── [Feature].feature      # One feature per file
+```
+
+## Page Object Model Standards
+
+### 1. Base Page Class (DO NOT MODIFY - USE THESE METHODS)
+
+```java
+// pages/BasePage.java - EXISTING BASE CLASS
+
+// Available methods to use in all page objects:
+protected WebDriver driver;
+protected WebDriverWait wait;  // 15 seconds timeout
+
+// ALWAYS use these methods, NEVER interact with WebDriver directly:
+public void click(WebElement element)                    // Waits and clicks
+public void type(WebElement element, String text)       // Waits, clears, types
+public String getText(WebElement element)               // Waits and gets text
+public boolean isDisplayed(WebElement element)          // Checks visibility
+public void navigateTo(String url)                      // Navigate to URL
+public String getCurrentUrl()                           // Get current URL
+public String getTitle()                                // Get page title
+public void waitForUrlContains(String urlPart)          // Wait for URL change
+public String getPageSource()                           // Get page HTML
+public Alert alert()                                    // Get alert with wait
+public void waitForPageLoadComplete()                   // Wait for page ready
+```
+
+### 2. Page Object Class Rules - MANDATORY
+
+#### CRITICAL RULES:
+1. **ONE CLASS PER PAGE** - Never combine multiple page objects in one file
+2. **MUST EXTEND BasePage** - All page classes extend BasePage
+3. **USE @FindBy ANNOTATIONS** - All locators use @FindBy, never driver.findElement()
+4. **CALL super(driver)** - Constructor must call parent constructor
+5. **INITIALIZE PageFactory** - Already done in BasePage constructor
+6. **PRIVATE WEBELEMENTS** - All WebElement fields are private
+7. **PUBLIC BEHAVIOR METHODS** - Provide public methods for actions
+8. **USE BASEPAGE METHODS** - Never call element.click(), use click(element)
+9. **NO ASSERTIONS** - Keep assertions in step definitions, not page objects
+10. **NO TEST LOGIC** - Page objects only handle page interactions
+
+#### Page Object Template - ALWAYS FOLLOW THIS:
+
+```java
+package com.blaze.pages;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+
+public class LoginPage extends BasePage {
+    
+    // 1. DECLARE ALL LOCATORS AT TOP WITH @FindBy
+    // Use clear, descriptive names
+    @FindBy(id = "loginusername")
+    private WebElement usernameField;
+    
+    @FindBy(id = "loginpassword")
+    private WebElement passwordField;
+    
+    @FindBy(xpath = "//button[@onclick='logIn()']")
+    private WebElement loginButton;
+    
+    @FindBy(id = "logInModalLabel")
+    private WebElement loginModalTitle;
+    
+    @FindBy(css = "button[data-dismiss='modal']")
+    private WebElement closeButton;
+    
+    // 2. CONSTRUCTOR - MUST CALL super(driver)
+    public LoginPage(WebDriver driver) {
+        super(driver);
+    }
+    
+    // 3. BEHAVIOR METHODS - PUBLIC, USE BASEPAGE METHODS
+    
+    /**
+     * Fill username field
+     * @param username - Username to enter
+     */
+    public void enterUsername(String username) {
+        type(usernameField, username);
+    }
+    
+    /**
+     * Fill password field
+     * @param password - Password to enter
+     */
+    public void enterPassword(String password) {
+        type(passwordField, password);
+    }
+    
+    /**
+     * Click login button
+     */
+    public void clickLoginButton() {
+        click(loginButton);
+    }
+    
+    /**
+     * Perform complete login with credentials
+     * @param username - User's username
+     * @param password - User's password
+     */
+    public void login(String username, String password) {
+        enterUsername(username);
+        enterPassword(password);
+        clickLoginButton();
+    }
+    
+    /**
+     * Check if login modal is displayed
+     * @return true if modal is visible
+     */
+    public boolean isLoginModalDisplayed() {
+        return isDisplayed(loginModalTitle);
+    }
+    
+    /**
+     * Get login modal title text
+     * @return Title text of login modal
+     */
+    public String getLoginModalTitle() {
+        return getText(loginModalTitle);
+    }
+    
+    /**
+     * Close login modal
+     */
+    public void closeLoginModal() {
+        click(closeButton);
+    }
+}
+```
+
+### 3. Locator Strategy - PRIORITY ORDER (MANDATORY)
+
+**ALWAYS follow this priority when selecting locators:**
+
+1. **id** (HIGHEST PRIORITY)
+   ```java
+   @FindBy(id = "username")
+   private WebElement usernameField;
+   ```
+
+2. **name** (SECOND PRIORITY)
+   ```java
+   @FindBy(name = "email")
+   private WebElement emailField;
+   ```
+
+3. **css** (THIRD PRIORITY)
+   ```java
+   @FindBy(css = ".btn-primary")
+   private WebElement submitButton;
+   
+   @FindBy(css = "button[type='submit']")
+   private WebElement loginButton;
+   ```
+
+4. **xpath** (LAST RESORT - use only when above options not available)
+   ```java
+   // Good xpath - text matching
+   @FindBy(xpath = "//button[text()='Submit']")
+   private WebElement submitButton;
+   
+   // Good xpath - contains
+   @FindBy(xpath = "//h2[contains(text(),'Welcome')]")
+   private WebElement welcomeMessage;
+   
+   // Acceptable xpath - attribute based
+   @FindBy(xpath = "//input[@placeholder='Search products']")
+   private WebElement searchField;
+   ```
+
+**LOCATOR EXAMPLES - CORRECT VS WRONG:**
+
+```java
+// ✅ CORRECT - Use simple, stable locators
+@FindBy(id = "submit-btn")
+@FindBy(name = "username")
+@FindBy(css = ".error-message")
+@FindBy(xpath = "//button[text()='Login']")
+
+// ❌ WRONG - Complex, fragile locators
+@FindBy(xpath = "//div[@class='container']//div[@class='form']//div[@class='row'][2]//input[@type='text']")
+// Should be: @FindBy(id = "username") or @FindBy(name = "username")
+
+// ❌ WRONG - Using driver.findElement
+WebElement element = driver.findElement(By.id("btn"));
+// Should be: @FindBy(id = "btn") private WebElement btn;
+```
+
+### 4. Step Definition Class Rules - MANDATORY
+
+#### CRITICAL RULES:
+1. **ONE STEP CLASS PER FEATURE AREA** - Login tests → LoginStep.java
+2. **INJECT WebDriverManager** - Always receive via constructor
+3. **INITIALIZE PAGE OBJECTS** - Create page objects in constructor
+4. **USE JUnit ASSERTIONS** - Import org.junit.Assert
+5. **DESCRIPTIVE ASSERTION MESSAGES** - Always include failure messages
+6. **FOLLOW AAA PATTERN** - Arrange, Act, Assert in each step
+7. **NO WEBDRIVER DIRECT ACCESS** - Use page object methods only
+8. **PACKAGE STRUCTURE** - Place in com.blaze.steps.[FeatureName]Test
+
+#### Step Definition Template - ALWAYS FOLLOW THIS:
+
+```java
+package com.blaze.steps.LoginTest;
+
+import com.blaze.config.WebDriverManager;
+import com.blaze.pages.HomePage;
+import com.blaze.pages.LoginPage;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.When;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.And;
+import org.junit.Assert;
+import org.openqa.selenium.WebDriver;
+
+public class LoginStep {
+    
+    // 1. DECLARE WebDriver AND PAGE OBJECTS
+    private WebDriver driver;
+    private HomePage homePage;
+    private LoginPage loginPage;
+    private String testUsername;
+    
+    // 2. CONSTRUCTOR - INJECT WebDriverManager
+    public LoginStep(WebDriverManager webDriverManager) {
+        this.driver = webDriverManager.getDriver();
+        this.homePage = new HomePage(driver);
+        this.loginPage = new LoginPage(driver);
+    }
+    
+    // 3. STEP METHODS WITH CUCUMBER ANNOTATIONS
+    
+    @Given("the user is on the login page")
+    public void userIsOnLoginPage() {
+        homePage.navigateToHomePage("https://www.demoblaze.com/");
+        homePage.clickLogin();
+        Assert.assertTrue("Login modal is not displayed", 
+            loginPage.isLoginModalDisplayed());
+    }
+    
+    @When("the user enters username {string} and password {string}")
+    public void userEntersCredentials(String username, String password) {
+        testUsername = username;
+        loginPage.login(username, password);
+    }
+    
+    @Then("the user should be logged in successfully")
+    public void userShouldBeLoggedIn() {
+        String expectedWelcome = "Welcome " + testUsername;
+        String actualWelcome = homePage.getLoggedInUsername();
+        Assert.assertEquals("Login username does not match", 
+            expectedWelcome, actualWelcome);
+    }
+    
+    @Then("an error alert should display {string}")
+    public void errorAlertShouldDisplay(String expectedMessage) {
+        String alertText = homePage.getAlertTextAndAccept();
+        Assert.assertEquals("Alert message does not match", 
+            expectedMessage, alertText);
+    }
+    
+    @And("the user should remain on the login page")
+    public void userShouldRemainOnLoginPage() {
+        Assert.assertTrue("User is not on login page", 
+            loginPage.isLoginModalDisplayed());
+    }
+}
+```
+
+### 5. Wait Strategy - MANDATORY RULES
+
+**NEVER use Thread.sleep() - ALWAYS use explicit waits from BasePage**
+
+```java
+// ✅ CORRECT - Use BasePage methods (waits are built-in)
+click(loginButton);              // Waits for clickable, then clicks
+type(usernameField, "test");    // Waits for visible, clears, types
+getText(errorMessage);          // Waits for visible, gets text
+isDisplayed(welcomeMsg);        // Waits for visible, returns boolean
+waitForUrlContains("dashboard"); // Custom wait for URL
+waitForPageLoadComplete();      // Wait for document.readyState
+
+// ❌ WRONG - Direct interactions without waits
+loginButton.click();            // May fail if element not ready
+usernameField.sendKeys("test"); // May fail if element not visible
+Thread.sleep(2000);             // NEVER use this - flaky and slow
+
+// ❌ WRONG - Manual WebDriverWait in page objects
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+wait.until(ExpectedConditions.elementToBeClickable(button));
+// BasePage already has wait - use click(button) instead
+```
+
+### 6. Assertion Rules - MANDATORY FORMAT
+
+**ALWAYS include descriptive messages in ALL assertions**
+
+```java
+// ✅ CORRECT - Descriptive assertion messages
+Assert.assertEquals("Login username does not match", 
+    expectedUsername, actualUsername);
+
+Assert.assertTrue("Home page should load successfully", 
+    homePage.getCurrentUrl().contains("demoblaze.com"));
+
+Assert.assertFalse("User should not be logged in", 
+    homePage.isUserLoggedIn());
+
+Assert.assertNotNull("Product name should not be null", 
+    productPage.getProductName());
+
+// ❌ WRONG - No assertion message
+Assert.assertTrue(condition);
+Assert.assertEquals(expected, actual);
+Assert.assertNotNull(value);
+
+// ❌ WRONG - Vague messages
+Assert.assertTrue("test failed", condition);
+Assert.assertEquals("not equal", expected, actual);
+```
+
+### 7. Feature File Standards (Gherkin)
+
+```gherkin
+Feature: User Login
+  As a registered user
+  I want to log into the application
+  So that I can access my account features
+
+  Background:
+    Given the user is on the home page
+
+  Scenario: Successful login with valid credentials
+    Given the user is on the login page
+    When the user enters username "test" and password "test"
+    Then the user should be logged in successfully
+    And the welcome message should display the username
+
+  Scenario: Failed login with invalid credentials
+    Given the user is on the login page
+    When the user enters username "invalid" and password "wrong"
+    Then an error alert should display "Wrong password."
+    And the user should remain on the login page
+
+  Scenario Outline: Login with multiple credentials
+    Given the user is on the login page
+    When the user enters username "<username>" and password "<password>"
+    Then the user should see "<result>"
+
+    Examples:
+      | username | password | result          |
+      | test     | test     | successful login|
+      | invalid  | wrong    | error message   |
+```
+
+**Feature File Rules:**
+- Use clear feature descriptions with user story format (As a/I want/So that)
+- Use Background for common preconditions
+- Scenario names should be descriptive and business-focused
+- Use Given-When-Then-And structure
+- Parameters in quotes: "parameter value"
+- Use Scenario Outline for data-driven tests
+
+### 8. Test Runner Configuration
+
+```java
+package com.blaze.runners;
+
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import org.junit.runner.RunWith;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+    features = "src/test/resources/features/Login.feature",
+    glue = {"com.blaze.steps", "com.blaze.hooks"},
+    plugin = {
+        "pretty",
+        "html:target/html-report-login.html",
+        "json:target/cucumber-login.json"
+    },
+    monochrome = true,
+    dryRun = false
+)
+public class LoginTestRunner {
+}
+```
+
+### 9. Alert and Popup Handling
+
+```java
+// In Page Objects - Handle alerts
+public String acceptAlertAndGetText() {
+    Alert alert = alert();  // Use BasePage method
+    String alertText = alert.getText();
+    alert.accept();
+    return alertText;
+}
+
+public void dismissAlert() {
+    Alert alert = alert();
+    alert.dismiss();
+}
+
+// In Step Definitions - Verify alerts
+@Then("an alert with message {string} should appear")
+public void verifyAlert(String expectedMessage) {
+    String alertText = homePage.acceptAlertAndGetText();
+    Assert.assertEquals("Alert message does not match", 
+        expectedMessage, alertText);
+}
+```
+
+### 10. List Handling and Dynamic Elements
+
+```java
+// In Page Objects - Handle lists
+@FindBy(css = "a.hrefch")
+private List<WebElement> productLinks;
+
+@FindBy(xpath = "//div[@class='card']")
+private List<WebElement> productCards;
+
+public void selectProductByName(String productName) {
+    for (WebElement product : productLinks) {
+        if (product.getText().equalsIgnoreCase(productName)) {
+            click(product);
+            break;
+        }
+    }
+}
+
+public int getProductCount() {
+    return productCards.size();
+}
+
+public List<String> getAllProductNames() {
+    List<String> names = new ArrayList<>();
+    for (WebElement product : productLinks) {
+        names.add(getText(product));
+    }
+    return names;
+}
+```
+
+## WRONG PATTERNS - DO NOT DO THIS
+
+### ❌ WRONG: Multiple Page Objects in One File
+```java
+// LoginAndHomePage.java - WRONG!
+public class LoginAndHomePage {
+    class LoginPage {}
+    class HomePage {}
+}
+```
+
+### ❌ WRONG: Not Extending BasePage
+```java
+public class ProductPage {
+    private WebDriver driver;
+    
+    public ProductPage(WebDriver driver) {
+        this.driver = driver;
+    }
+}
+```
+
+### ❌ WRONG: Direct WebDriver Usage
+```java
+public void clickButton() {
+    driver.findElement(By.id("btn")).click();  // WRONG!
+}
+```
+
+### ❌ WRONG: Exposing WebElements
+```java
+public WebElement getLoginButton() {
+    return loginButton;  // WRONG! Never expose WebElements
+}
+```
+
+### ❌ WRONG: Assertions in Page Objects
+```java
+public void verifyLogin() {
+    Assert.assertTrue(welcomeMessage.isDisplayed());  // WRONG!
+}
+```
+
+### ❌ WRONG: No Assertion Messages
+```java
+@Then("user should be logged in")
+public void verifyLogin() {
+    Assert.assertTrue(homePage.isWelcomeDisplayed());  // WRONG!
+}
+```
+
+## CORRECT PATTERNS - ALWAYS DO THIS
+
+### ✅ CORRECT: Separate Page Object Files
+```java
+// LoginPage.java
+public class LoginPage extends BasePage {
+    // Login page elements and methods
+}
+
+// HomePage.java  
+public class HomePage extends BasePage {
+    // Home page elements and methods
+}
+```
+
+### ✅ CORRECT: Using BasePage Methods
+```java
+public void clickLoginButton() {
+    click(loginButton);  // CORRECT!
+}
+
+public void enterUsername(String username) {
+    type(usernameField, username);  // CORRECT!
+}
+```
+
+### ✅ CORRECT: Behavior-Based Methods
+```java
+public void performLogin(String username, String password) {
+    enterUsername(username);
+    enterPassword(password);
+    clickLoginButton();
+}
+```
+
+### ✅ CORRECT: Assertions in Step Definitions
+```java
+@Then("the user should be logged in")
+public void verifyLoginSuccess() {
+    Assert.assertTrue("Welcome message not displayed", 
+        homePage.isWelcomeMessageDisplayed());
+    Assert.assertEquals("Username does not match", 
+        expectedUsername, homePage.getLoggedInUsername());
+}
+```
+
+## Code Generation Checklist - VERIFY BEFORE GENERATING
+
+**Before generating ANY code, ask yourself:**
+
+- [ ] Am I creating ONE page object per page?
+- [ ] Does the page class extend BasePage?
+- [ ] Am I using @FindBy for ALL locators?
+- [ ] Am I calling super(driver) in constructor?
+- [ ] Am I using BasePage methods (click, type, getText)?
+- [ ] Are step definitions injecting WebDriverManager?
+- [ ] Do I have assertions with descriptive messages?
+- [ ] Am I following locator priority (id > name > css > xpath)?
+- [ ] Have I avoided Thread.sleep()?
+- [ ] Is each class in its own separate file?
+- [ ] Are package names correct (com.blaze.pages, com.blaze.steps)?
+- [ ] Have I documented methods with clear comments?
+
+## Response Format for Code Generation
+
+When generating code, provide:
+
+1. **File Path** - Exact location where file should be created
+2. **Package Declaration** - Correct package name
+3. **Import Statements** - All required imports
+4. **Complete Class** - Fully implemented, ready to use
+5. **Separate Files** - Each class in its own code block
+
+Example format:
+```
+File: src/main/java/com/blaze/pages/LoginPage.java
+
+[Complete LoginPage.java code]
+
+---
+
+File: src/test/java/com/blaze/steps/LoginTest/LoginStep.java
+
+[Complete LoginStep.java code]
+
+---
+
+File: src/test/resources/features/Login.feature
+
+[Complete Login.feature code]
+```
+
+## Test Data Management
+
+```java
+// In step definitions - manage test data
+public class LoginStep {
+    private static final String BASE_URL = "https://www.demoblaze.com/";
+    private static final String VALID_USERNAME = "test";
+    private static final String VALID_PASSWORD = "test";
+    
+    // Or use property files/config classes
+}
+```
+
+## Parallel Execution Considerations
+
+- WebDriverManager uses ThreadLocal for thread safety
+- Each thread gets its own WebDriver instance
+- Tests are isolated and can run in parallel
+- Configured in pom.xml: `<parallel>methods</parallel>`
+
+---
+
+**FINAL REMINDER**: 
+- ONE PAGE = ONE CLASS
+- ALWAYS EXTEND BasePage
+- USE BasePage METHODS
+- ASSERTIONS WITH MESSAGES
+- NEVER Thread.sleep()
+- FOLLOW LOCATOR PRIORITY
+- SEPARATE FILES FOR EACH CLASS
+
+**Quality and maintainability are more important than speed. Follow these standards strictly.**
