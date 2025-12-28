@@ -3,8 +3,6 @@ package com.blaze.steps.ProductManagementTest;
 import com.blaze.config.WebDriverManager;
 import com.blaze.pages.HomePage;
 import com.blaze.pages.ProductListPage;
-import com.blaze.pages.ProductPage;
-import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.And;
@@ -21,10 +19,6 @@ public class ProductManagementStep {
     private WebDriver driver;
     private HomePage homePage;
     private ProductListPage productListPage;
-    private ProductPage productPage;
-
-    // TEST DATA
-    private static final String BASE_URL = "https://www.demoblaze.com/";
 
     /**
      * Constructor - INJECT WebDriverManager
@@ -35,7 +29,6 @@ public class ProductManagementStep {
         this.driver = webDriverManager.getDriver();
         this.homePage = new HomePage(driver);
         this.productListPage = new ProductListPage(driver);
-        this.productPage = new ProductPage(driver);
     }
 
     // ============== WHEN STEPS ==============
