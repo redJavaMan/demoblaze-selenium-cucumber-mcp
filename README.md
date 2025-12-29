@@ -1,4 +1,4 @@
-# Blaze UI E2E Test Automation Framework
+# AI-Driven Test Automation: Selenium MCP Integration with AI Agent for DemoBlaze
 
 A comprehensive end-to-end test automation framework for the DemoBlaze e-commerce application, built using Selenium WebDriver, Java, Cucumber BDD, and enhanced with AI-powered test generation capabilities through Selenium MCP and Claude AI agents.
 
